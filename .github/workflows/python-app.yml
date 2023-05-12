@@ -43,4 +43,4 @@ jobs:
       # Run our unit tests using the test application
       - name: Test with pytest
         run: |
-         pytest farm/tests/test_farm.py
+         pytest ./farm/tests/test_farm.py
