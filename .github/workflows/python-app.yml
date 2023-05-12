@@ -1,21 +1,15 @@
+NEW
+
 name: CI
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [main]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: self-hosted
-
 
     steps:
       - name: Check if Python is installed
@@ -24,18 +18,23 @@ jobs:
             echo "Python is already installed"
             exit 0
           fi
+
       - name: Install Python
         run: |
           sudo apt-get update
           sudo apt-get install -y python3
-      # Generate requirements.txt
+
       - name: Generate requirements.txt
         run: |
-         pip install pipreqs
-         pipreqs . --force
-         python3 -m pip install --upgrade pip
-         pip3 install -r requirements.txt
-      # Run our unit tests using the test application
+          pip install pipreqs
+          pipreqs /home/farm --force
+          python3 -m pip install --upgrade pip
+          pip3 install -r /home/farm/requirements.txt
+
       - name: Test with pytest
         run: |
-         pytest ./farm/tests/test_farm.py
+          pytest /home/farm/tests/test_farm.py
+
+      - name: Deploy app
+        run: |
+          cp -r /home/farm/* /home/farm
