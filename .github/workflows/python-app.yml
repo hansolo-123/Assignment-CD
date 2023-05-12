@@ -43,4 +43,4 @@ jobs:
        # Run our unit tests using the test application
       - name: Deploy App
         run: |
-         cp -r /home/farm/* /home/farm
+         cp -rn /home/farm/* /home/farm
