@@ -18,18 +18,15 @@ jobs:
     # The type of runner that the job will run on
     runs-on: self-hosted
 
-    strategy:
-      matrix:
-        python-version: ['3.10.4']
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.10.4
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        architecture: x64
+        url: https://github.com/actions/python-versions/releases/download/3.10.4-2650226428/python-3.10.4-linux-20.04-x64.tar.gz
 
       # Generate requirements.txt
     - name: Generate requirements.txt
