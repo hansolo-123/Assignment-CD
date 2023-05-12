@@ -27,6 +27,7 @@ jobs:
       with:
         python-version: 3.10.4
         architecture: x64
+        clear-caches: true
 
       # Generate requirements.txt
     - name: Generate requirements.txt
