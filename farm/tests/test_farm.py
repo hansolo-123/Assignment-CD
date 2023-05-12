@@ -10,7 +10,7 @@ def test_index_route():
 def test_index_response():
     client = app.test_client()
     response = client.get('/')
-    assert response.get_data(as_text=True) == 'Hello, yoxcvsczxu!'
+    assert response.get_data(as_text=True) == 'Hello, yoxcvsczxuu!'
 
 # Test that the cow route returns the expected response
 def test_cow_response():
