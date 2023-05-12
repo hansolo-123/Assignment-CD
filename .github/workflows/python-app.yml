@@ -44,3 +44,8 @@ jobs:
       - name: Deploy App
         run: |
          cp -rn /home/farm/* /home/farm
+       
+      - name: Restart farm service
+        run: |
+         sudo systemctl daemon-reload
+         sudo systemctl restart farm.service
