@@ -43,7 +43,7 @@ jobs:
        # Run our unit tests using the test application
       - name: Deploy App
         run: |
-         cp -rn /home/farm/* /home/farm
+         cp -r /home/farm/* /home/farm
        
       - name: Restart farm service
         run: |
