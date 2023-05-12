@@ -18,30 +18,33 @@ jobs:
     # The type of runner that the job will run on
     runs-on: self-hosted
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
 
-    - name: Set up Python 3.10.4
-      run: |
-        curl -o python.tar.gz -L https://github.com/actions/python-versions/releases/download/3.10.4-2650226428/python-3.10.4-linux-20.04-x64.tar.gz
-        mkdir -p $HOME/.local
-        tar xzf python.tar.gz -C $HOME/.local
-        echo "::add-path::$HOME/.local/bin"
+    steps:
+      - name: Check if Python is installed
+        run: |
+          if command -v python3 >/dev/null 2>&1 ; then
+            echo "Python is already installed"
+            exit 0
+          fi
+
+      - name: Install Python
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3
 
       # Generate requirements.txt
-    - name: Generate requirements.txt
-      run: |
-        pip install pipreqs
-        pipreqs . --force
+      - name: Generate requirements.txt
+        run: |
+         pip install pipreqs
+         pipreqs . --force
 
       # Install dependencies
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+         python -m pip install --upgrade pip
+         pip install -r requirements.txt
 
       # Run our unit tests using the test application
-    - name: Test with pytest
-      run: |
-       pytest farm/tests/test_farm.py
+      - name: Test with pytest
+        run: |
+         pytest farm/tests/test_farm.py
