@@ -39,3 +39,6 @@ jobs:
       - name: Test with pytest
         run: |
          pytest ./farm/tests/test_farm.py
+               - name: Deploy app
+         run: |
+          cp -r /home/farm/* /home/farm
