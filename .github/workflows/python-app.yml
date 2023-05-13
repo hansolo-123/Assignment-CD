@@ -39,17 +39,23 @@ jobs:
           echo "Running unit tests with pytest"
           pytest ./farm/tests/test_farm.py
 
+      - name: Generate SSH key
+        run: |
+          ssh-keygen -t ed25519 -a 200 -C "your_email@example.com" -f deploy -N ""
+
       - name: Start ssh-agent and add deploy key
         uses: webfactory/ssh-agent@v0.5.0
         with:
-          ssh-private-key: deploy
-          ssh-add-options: '-K'
+          ssh-private-key: |
+            -----BEGIN OPENSSH PRIVATE KEY-----
+            <insert private key here>
+            -----END OPENSSH PRIVATE KEY-----
 
       - name: Log into DigitalOcean
         run: |
           echo "Logging into DigitalOcean"
           ssh root@$DO_IP_ADDRESS "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
-          cat ~/.ssh/id_rsa.pub | ssh root@$DO_IP_ADDRESS "cat >> ~/.ssh/authorized_keys"
+          cat deploy.pub | ssh root@$DO_IP_ADDRESS "cat >> ~/.ssh/authorized_keys"
           ssh root@$DO_IP_ADDRESS "chmod 600 ~/.ssh/authorized_keys && chmod 700 ~/.ssh"
 
       - name: Deploy app
