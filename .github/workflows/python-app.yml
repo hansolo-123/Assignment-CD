@@ -1,4 +1,4 @@
-name: Add SSH Key to Authorized Keys
+name: SSH Login Workflow
 
 on:
   push:
@@ -6,18 +6,18 @@ on:
       - main
 
 env:
-  SERVER_IP: 10.0.0.1
+  SERVER_IP: ${{ secrets.SERVER_IP }}
   SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
 jobs:
-  add-ssh-key:
-    runs-on: ubuntu-latest
+  ssh-login:
+    runs-on: 'self-hosted'
     steps:
-      - name: Modify Permissions
-        run: |
-          sudo chmod 700 /root/.ssh
-          sudo chmod 600 /root/.ssh/authorized_keys
-      - name: Add SSH Host Key
-        run: ssh-keyscan ${SERVER_IP} >> /root/.ssh/known_hosts
-      - name: Add SSH Private Key to Authorized Keys
-        run: echo "$SSH_PRIVATE_KEY" >> /root/.ssh/authorized_keys
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: ${{ env.SSH_PRIVATE_KEY }}
+      - name: SSH Login
+        run: ssh root@${{ env.SERVER_IP }}
