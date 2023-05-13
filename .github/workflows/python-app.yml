@@ -1,21 +1,20 @@
-name: Deploy to DigitalOcean
-
+# Controls when the workflow will run
 on:
+  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [main]
+
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-env:
-  DO_IP_ADDRESS: 178.128.92.153
-  DO_SSH_PORT: 22
-
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  deploy:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
     runs-on: self-hosted
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
 
+    steps:
       - name: Check if Python is installed
         run: |
           if command -v python3 >/dev/null 2>&1 ; then
@@ -28,36 +27,39 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3
 
+      # Generate requirements.txt
       - name: Generate requirements.txt
         run: |
-          echo "Generating requirements.txt file"
           pip install pipreqs
           pipreqs . --force
           python3 -m pip install --upgrade pip
           pip3 install -r requirements.txt
 
-      - name: Run unit tests
+      # Run our unit tests using the test application
+      - name: Test with pytest
         run: |
-          echo "Running unit tests with pytest"
           pytest ./farm/tests/test_farm.py
 
-      - name: Log into DigitalOcean
+      - name: Deploy App
         run: |
-          echo "Logging into DigitalOcean"
-          echo "" > ~/.ssh/config
-          echo "Host $DO_IP_ADDRESS" >> ~/.ssh/config
-          echo "  IdentityFile ~/.ssh/deploy" >> ~/.ssh/config
-          chmod 600 ~/.ssh/config
-          ssh-keyscan -t rsa $DO_IP_ADDRESS > ~/.ssh/known_hosts
-          ssh -i ~/.ssh/deploy -o StrictHostKeyChecking=no root@$DO_IP_ADDRESS "echo Logged in successfully"
-
-      - name: Deploy app
-        run: |
-          echo "Deploying app to server"
-          scp -i ~/.ssh/deploy -r . root@$DO_IP_ADDRESS:/var/www/my-app
-          ssh -i ~/.ssh/deploy -o StrictHostKeyChecking=no root@$DO_IP_ADDRESS "cd /var/www/my-app && npm install && pm2 restart index.js"
+          rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -i DEPLOY_SSH -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no' -o 'IdentityFile=/root/.ssh/do_token'" /github/workspace/Assignment-CD/ root@http://178.128.92.153/:/home/
 
       - name: Restart farm service
         run: |
-          echo "Restarting farm service"
-          ssh -i ~/.ssh/deploy -o StrictHostKeyChecking=no root@$DO_IP_ADDRESS "sudo systemctl daemon-reload && sudo systemctl restart farm.service"
+          sudo systemctl daemon-reload
+          sudo systemctl restart farm.service
+
+  # This workflow contains a separate job called "logging"
+  logging:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Logging
+        uses: sp4ke/actions-log-deployment-status@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+          environment: production
+          deployment_id: ${{ github.run_id }}
+          url: https://example.com
+          description: "Deployment Status"
