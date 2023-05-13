@@ -2,10 +2,11 @@ name: Deploy to Server
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  ssh-connection:
+  ssh-deploy:
+    name: SSH Deploy
     runs-on: 'self-hosted'
     steps:
       - name: Checkout Code
@@ -23,3 +24,54 @@ jobs:
       - name: SSH into server and run script
         run: |
           ssh -o "StrictHostKeyChecking=yes" -i ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }} root@${{ secrets.SERVER_IP }} 'cd /root/ && ./deploy.sh code and use root as user'
+
+  app-deploy:
+    name: Python App Deploy
+    runs-on: self-hosted
+    steps:
+      - name: Check if Python is installed
+        run: |
+          if command -v python3 >/dev/null 2>&1 ; then
+            echo "Python is already installed"
+            exit 0
+          fi
+
+      - name: Install Python
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3
+
+      - name: Generate requirements.txt
+        run: |
+          pip install pipreqs
+          pipreqs . --force
+          python3 -m pip install --upgrade pip
+          pip3 install -r requirements.txt
+
+      - name: Test with pytest
+        run: |
+          pytest ./farm/tests/test_farm.py
+
+      - name: Deploy App
+        run: |
+          rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -i DEPLOY_SSH -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no' -o 'IdentityFile=/root/.ssh/do_token'" /github/workspace/Assignment-CD/ root@http://178.128.92.153/:/home/
+
+      - name: Restart farm service
+        run: |
+          sudo systemctl daemon-reload
+          sudo systemctl restart farm.service
+
+  logging:
+    name: Deployment Logging
+    runs-on: self-hosted
+    needs: [ssh-deploy, app-deploy]
+    steps:
+      - name: Logging
+        uses: sp4ke/actions-log-deployment-status@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+          environment: production
+          deployment_id: ${{ github.run_id }}
+          url: https://example.com
+          description: "Deployment Status"
