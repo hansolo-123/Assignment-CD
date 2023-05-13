@@ -32,13 +32,14 @@ jobs:
           echo "::set-output name=server_ip::${{ secrets.SERVER_IP }}"
 
       - name: Authenticate with SSH
-        uses: webfactory/ssh-agent@v0.5.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Test SSH connection
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ needs.build.outputs.server_ip }}
         run: |
-          ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} exit
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh -o StrictHostKeyChecking=no -p 22 root@"$SERVER_IP" exit
 
       - name: Deploy App - Step 1
         run: |
@@ -55,13 +56,3 @@ jobs:
       - name: Restart farm service
         run: |
           ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} 'sudo systemctl daemon-reload && sudo systemctl restart farm.service'
-
-      - name: Log deployment status
-        uses: sp4ke/actions-log-deployment-status@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ job.status }}
-          environment: production
-          deployment_id: ${{ github.run_id }}
-          url: https://example.com
-          description: "Deployment Status"
