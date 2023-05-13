@@ -1,28 +1,23 @@
-name: SSH Login and Key Deployment
+name: Add SSH Key to Authorized Keys
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+
+env:
+  SERVER_IP: 10.0.0.1
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
 jobs:
-  deploy_key:
+  add-ssh-key:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
-
-      - name: Install ssh-agent
+      - name: Modify Permissions
         run: |
-          apt-get update -y
-          apt-get install openssh-client -y
-
-      - name: Add private key to ssh-agent
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
-
-      - name: Add server to known_hosts
-        run: ssh-keyscan ${SERVER_IP} >> ~/.ssh/known_hosts
-
-      - name: Copy public key to server
-        run: cat ~/.ssh/id_rsa.pub | ssh root@${SERVER_IP} 'cat >> /root/.ssh/authorized_keys'
+          sudo chmod 700 /root/.ssh
+          sudo chmod 600 /root/.ssh/authorized_keys
+      - name: Add SSH Host Key
+        run: ssh-keyscan ${SERVER_IP} >> /root/.ssh/known_hosts
+      - name: Add SSH Private Key to Authorized Keys
+        run: echo "$SSH_PRIVATE_KEY" >> /root/.ssh/authorized_keys
