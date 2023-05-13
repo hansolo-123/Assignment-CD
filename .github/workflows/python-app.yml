@@ -1,62 +1,23 @@
+name: SSH Login Workflow
+
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    branches:
+      - main
+
+env:
+  SERVER_IP: ${{ secrets.SERVER_IP }}
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
 jobs:
-  build:
-    runs-on: self-hosted
+  ssh-login:
+    runs-on: ubuntu-latest
     steps:
-      - name: Check if Python is installed
-        run: |
-          if command -v python3 >/dev/null 2>&1 ; then
-            echo "Python is already installed"
-            exit 0
-          fi
-
-      - name: Install Python
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3
-
-      - name: Generate requirements.txt
-        run: |
-          pip install pipreqs
-          pipreqs . --force
-          python3 -m pip install --upgrade pip
-          pip3 install -r requirements.txt
-
-      - name: Get server IP
-        run: |
-          echo "Server IP: ${{ secrets.SERVER_IP }}"
-          echo "::set-output name=server_ip::${{ secrets.SERVER_IP }}"
-
-          echo "Server IP: ***"
-          if command -v run >/dev/null 2>&1; then
-            run some_command
-          else
-            echo "Warning: 'run' command not found. Please install it."
-          fi
-          echo "Load key \"ssh_key\": error in libcrypto"
-          ssh-add ssh_key 2>/dev/null
-          if [ $? -eq 0 ]; then
-            echo "SSH key added successfully."
-          else
-            echo "Error: Failed to add SSH key."
-          fi
-
-      - name: Deploy App - Step 1
-        run: |
-          rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -p 22" /github/workspace/Assignment-CD/ root@${{ needs.build.outputs.server_ip }}:/home/deploy/app
-
-      - name: Deploy App - Step 2
-        run: |
-          ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} 'chmod +x /home/deploy/app/deploy.sh'
-
-      - name: Deploy App - Step 3
-        run: |
-          ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} '/home/deploy/app/deploy.sh'
-
-      - name: Restart farm service
-        run: |
-          ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} 'sudo systemctl daemon-reload && sudo systemctl restart farm.service'
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: ${{ env.SSH_PRIVATE_KEY }}
+      - name: SSH Login
+        run: ssh root@${{ env.SERVER_IP }}
