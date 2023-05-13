@@ -14,10 +14,6 @@ jobs:
     # The type of runner that the job will run on
     runs-on: self-hosted
 
-    # Environment variables for the job
-    env:
-      DEPLOY_USER: "root"
-
     steps:
       - name: Check if Python is installed
         run: |
@@ -31,9 +27,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3
 
+      - name: Log into DigitalOcean using deploy access token
+        run: |
+          echo "Logging into DigitalOcean"
+          echo "${{ secrets.DEPLOY }}" > ~/.ssh/do_token
+          chmod 600 ~/.ssh/do_token
+          ssh-keyscan -t rsa 178.128.92.153 > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/do_token -o StrictHostKeyChecking=no root@178.128.92.153 "echo Logged in successfully"
+
       # Generate requirements.txt
       - name: Generate requirements.txt
         run: |
+          echo "Generating requirements.txt"
           pip install pipreqs
           pipreqs . --force
           python3 -m pip install --upgrade pip
@@ -42,23 +47,16 @@ jobs:
       # Run our unit tests using the test application
       - name: Test with pytest
         run: |
+          echo "Running pytest"
           pytest ./farm/tests/test_farm.py
-       
-      - name: Deploy App
+
+      - name: Copy Assignment-CD folder to remote hosted server
         run: |
-          rsync -avz --exclude='.git*' --exclude='__pycache__' \
-            -e "ssh -o StrictHostKeyChecking=no \
-                -i ${{ secrets.DEPLOY_SSH }} \
-                -p 22 \
-                -o 'UserKnownHostsFile=/dev/null' \
-                -o 'IdentitiesOnly=yes' \
-                -o 'PreferredAuthentications=publickey' \
-                -o 'PasswordAuthentication=no' \
-                -o 'IdentityFile=/root/.ssh/do_token'" \
-            /github/workspace/Assignment-CD/ \
-            ${DEPLOY_USER}@178.128.92.153:/home/
+          echo "Copying Assignment-CD folder to remote hosted server"
+          rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/do_token -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no'" /github/workspace/Assignment-CD/ root@178.128.92.153:/home/
 
       - name: Restart farm service
         run: |
+          echo "Restarting farm service"
           sudo systemctl daemon-reload
           sudo systemctl restart farm.service
