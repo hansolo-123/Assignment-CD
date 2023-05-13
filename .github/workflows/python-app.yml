@@ -40,10 +40,10 @@ jobs:
         run: |
          pytest ./farm/tests/test_farm.py
        
-       # Run our unit tests using the test application
       - name: Deploy App
         run: |
-         rsync -av --ignore-times --delete /home/farm/ /home/farm/ 
+         rsync -avz --exclude='.git*' --exclude='farm/__pycache__' /github/workspace/Assignment-CD/* user@server:/home/
+ 
        
       - name: Restart farm service
         run: |
