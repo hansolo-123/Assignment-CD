@@ -1,24 +1,28 @@
-name: SSH Login Workflow
+name: SSH Login and Key Deployment
 
-on:
-  push:
-    branches:
-      - main
-
-env:
-  SERVER_IP: 178.128.92.153
-  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+on: [push]
 
 jobs:
-  ssh-login:
+  deploy_key:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
+      - name: Checkout repo
         uses: actions/checkout@v2
-      - name: Add SSH Host Key
-          sudo bash -c 'ssh-keyscan ${SERVER_IP} >> /root/.ssh/authorized_keys'
-      - name: SSH Login
+
+      - name: Install ssh-agent
         run: |
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 400 ~/.ssh/id_rsa
-          ssh -o "StrictHostKeyChecking no" root@${SERVER_IP} "ls"
+          apt-get update -y
+          apt-get install openssh-client -y
+
+      - name: Add private key to ssh-agent
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
+
+      - name: Add server to known_hosts
+        run: ssh-keyscan ${SERVER_IP} >> ~/.ssh/known_hosts
+
+      - name: Copy public key to server
+        run: cat ~/.ssh/id_rsa.pub | ssh root@${SERVER_IP} 'cat >> /root/.ssh/authorized_keys'
