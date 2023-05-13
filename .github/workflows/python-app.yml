@@ -1,3 +1,5 @@
+name: Deploy to Digital Ocean
+
 on:
   push:
     branches: [main]
@@ -39,31 +41,16 @@ jobs:
           echo "Running unit tests with pytest"
           pytest ./farm/tests/test_farm.py
 
-      - name: Generate SSH key
-        run: |
-          ssh-keygen -t ed25519 -a 200 -C "your_email@example.com" -f deploy -N ""
-
       - name: Start ssh-agent and add deploy key
-        run: |
-          eval "$(ssh-agent -s)"
-          puttygen id_rsa.ppk -O private-openssh -o id_rsa
-          chmod 400 id_rsa
-          ssh-add id_rsa
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+          ssh-private-key: |
+            ${{ secrets.PRIVATE_KEY }}
 
       - name: Log into DigitalOcean
         run: |
           echo "Logging into DigitalOcean"
           ssh root@$DO_IP_ADDRESS "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
-          cat deploy.pub | ssh root@$DO_IP_ADDRESS "cat >> ~/.ssh/authorized_keys"
+          cat /root/.ssh/id_rsa.pub | ssh root@$DO_IP_ADDRESS "cat >> ~/.ssh/authorized_keys"
           ssh root@$DO_IP_ADDRESS "chmod 600 ~/.ssh/authorized_keys && chmod 700 ~/.ssh"
-
-      - name: Deploy app
-        run: |
-          echo "Deploying app to server"
-          scp -r . root@$DO_IP_ADDRESS:/var/www/my-app
-          ssh root@$DO_IP_ADDRESS "cd /var/www/my-app && npm install && pm2 restart index.js"
-
-      - name: Restart farm service
-        run: |
-          echo "Restarting farm service"
-          ssh root@$DO_IP_ADDRESS "sudo systemctl daemon-reload && sudo systemctl restart farm.service"
+          ssh -i /root/.ssh/id_rsa root@$DO_IP_ADDRESS
