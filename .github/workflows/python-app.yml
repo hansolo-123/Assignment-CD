@@ -14,6 +14,10 @@ jobs:
     # The type of runner that the job will run on
     runs-on: self-hosted
 
+    # Environment variables for the job
+    env:
+      DEPLOY_USER: "root"
+
     steps:
       - name: Check if Python is installed
         run: |
@@ -39,27 +43,22 @@ jobs:
       - name: Test with pytest
         run: |
           pytest ./farm/tests/test_farm.py
-
+       
       - name: Deploy App
         run: |
-          rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -i DEPLOY_SSH -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no' -o 'IdentityFile=/root/.ssh/do_token'" /github/workspace/Assignment-CD/ root@http://178.128.92.153/:/home/
+          rsync -avz --exclude='.git*' --exclude='__pycache__' \
+            -e "ssh -o StrictHostKeyChecking=no \
+                -i ${{ secrets.DEPLOY_SSH }} \
+                -p 22 \
+                -o 'UserKnownHostsFile=/dev/null' \
+                -o 'IdentitiesOnly=yes' \
+                -o 'PreferredAuthentications=publickey' \
+                -o 'PasswordAuthentication=no' \
+                -o 'IdentityFile=/root/.ssh/do_token'" \
+            /github/workspace/Assignment-CD/ \
+            ${DEPLOY_USER}@178.128.92.153:/home/
 
       - name: Restart farm service
         run: |
           sudo systemctl daemon-reload
           sudo systemctl restart farm.service
-
-  # This workflow contains a separate job called "logging"
-  logging:
-    runs-on: self-hosted
-    needs: build
-    steps:
-      - name: Logging
-        uses: sp4ke/actions-log-deployment-status@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ job.status }}
-          environment: production
-          deployment_id: ${{ github.run_id }}
-          url: https://example.com
-          description: "Deployment Status"
