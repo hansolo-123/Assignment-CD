@@ -40,22 +40,17 @@ jobs:
           pytest ./farm/tests/test_farm.py
 
       - name: Log into DigitalOcean
-        run: |
-          echo "Logging into DigitalOcean"
-          echo "" > ~/.ssh/config
-          echo "Host $DO_IP_ADDRESS" >> ~/.ssh/config
-          echo "  IdentityFile ~/.ssh/deploy" >> ~/.ssh/config
-          chmod 600 ~/.ssh/config
-          ssh-keyscan -t rsa $DO_IP_ADDRESS > ~/.ssh/known_hosts
-          ssh -i ~/.ssh/deploy -o StrictHostKeyChecking=no root@$DO_IP_ADDRESS "echo Logged in successfully"
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
       - name: Deploy app
         run: |
           echo "Deploying app to server"
-          scp -i ~/.ssh/deploy -r . root@$DO_IP_ADDRESS:/var/www/my-app
-          ssh -i ~/.ssh/deploy -o StrictHostKeyChecking=no root@$DO_IP_ADDRESS "cd /var/www/my-app && npm install && pm2 restart index.js"
+          scp -r . root@$DO_IP_ADDRESS:/var/www/my-app
+          ssh root@$DO_IP_ADDRESS "cd /var/www/my-app && npm install && pm2 restart index.js"
 
       - name: Restart farm service
         run: |
           echo "Restarting farm service"
-          ssh -i ~/.ssh/deploy -o StrictHostKeyChecking=no root@$DO_IP_ADDRESS "sudo systemctl daemon-reload && sudo systemctl restart farm.service"
+          ssh root@$DO_IP_ADDRESS "sudo systemctl daemon-reload && sudo systemctl restart farm.service"
