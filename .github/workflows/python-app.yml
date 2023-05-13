@@ -42,9 +42,8 @@ jobs:
        
       - name: Deploy App
         run: |
-         rsync -avz -e "ssh -i /path/to/ssh/key" --exclude='.git*' --exclude='farm/__pycache__' /path/to/Assignment-CD/ user@server:/home/
+         rsync -avz --exclude='.git*' --exclude='farm/__pycache__' /github/workspace/Assignment-CD/* /home/
 
- 
        
       - name: Restart farm service
         run: |
