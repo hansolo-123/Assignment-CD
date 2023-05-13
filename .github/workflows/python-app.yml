@@ -47,21 +47,6 @@ jobs:
       - name: Log into DigitalOcean
         run: |
           echo "Logging into DigitalOcean"
-          echo "" > ~/.ssh/autorized_keys
-          echo "Host $DO_IP_ADDRESS" >> ~/.ssh/autorized_keys
-          echo "  IdentityFile ~/.ssh/deploy" >> ~/.ssh/autorized_keys
-          chmod 600 ~/.ssh/autorized_keys
-          ssh-keyscan -t rsa $DO_IP_ADDRESS > ~/.ssh/known_hosts
-          ssh -o StrictHostKeyChecking=no root@$DO_IP_ADDRESS "echo Logged in successfully"
-
-
-      - name: Deploy app
-        run: |
-          echo "Deploying app to server"
-          scp -r . root@$DO_IP_ADDRESS:/var/www/my-app
-          ssh root@$DO_IP_ADDRESS "cd /var/www/my-app && npm install && pm2 restart index.js"
-
-      - name: Restart farm service
-        run: |
-          echo "Restarting farm service"
-          ssh root@$DO_IP_ADDRESS "sudo systemctl daemon-reload && sudo systemctl restart farm.service"
+          ssh root@$DO_IP_ADDRESS "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
+          cat ~/.ssh/id_rsa.pub | ssh root@$DO_IP_ADDRESS "cat >> ~/.ssh/authorized_keys"
+          ssh root@$DO_IP_ADDRESS "chmod 600 ~/.ssh/authorized_keys && chmod 700 ~/.ssh"
