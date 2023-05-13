@@ -43,6 +43,7 @@ jobs:
         uses: webfactory/ssh-agent@v0.5.0
         with:
           ssh-private-key: deploy
+          ssh-add-options: '-K'
 
       - name: Log into DigitalOcean
         run: |
@@ -50,3 +51,14 @@ jobs:
           ssh root@$DO_IP_ADDRESS "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
           cat ~/.ssh/id_rsa.pub | ssh root@$DO_IP_ADDRESS "cat >> ~/.ssh/authorized_keys"
           ssh root@$DO_IP_ADDRESS "chmod 600 ~/.ssh/authorized_keys && chmod 700 ~/.ssh"
+
+      - name: Deploy app
+        run: |
+          echo "Deploying app to server"
+          scp -r . root@$DO_IP_ADDRESS:/var/www/my-app
+          ssh root@$DO_IP_ADDRESS "cd /var/www/my-app && npm install && pm2 restart index.js"
+
+      - name: Restart farm service
+        run: |
+          echo "Restarting farm service"
+          ssh root@$DO_IP_ADDRESS "sudo systemctl daemon-reload && sudo systemctl restart farm.service"
