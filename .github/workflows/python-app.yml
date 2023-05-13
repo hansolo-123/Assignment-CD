@@ -42,7 +42,7 @@ jobs:
        
       - name: Deploy App
         run: |
-         rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -i ${{ secrets.DEPLOY_SSH }}" /github/workspace/Assignment-CD/ root@178.128.92.153:/home/
+         rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -i DEPLOY_SSH" /github/workspace/Assignment-CD/ root@178.128.92.153:/root/
        
       - name: Restart farm service
         run: |
