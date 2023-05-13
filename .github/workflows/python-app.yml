@@ -15,7 +15,7 @@ jobs:
       - name: SSH Login
         run: |
           eval "$(ssh-agent -s)"
-          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
+          ssh-add - <<< "${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}"
           ssh -o "StrictHostKeyChecking=yes" root@${{ secrets.SERVER_IP }}
 
       - name: Print private key
