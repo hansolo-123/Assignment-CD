@@ -1,9 +1,8 @@
-name: SSH Connection Test
+name: Deploy to Server
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   ssh-connection:
@@ -12,16 +11,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: SSH Login
-        run: |
-          export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id_rsa
-          ssh -o "StrictHostKeyChecking=yes" root@${{ secrets.SERVER_IP }}
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+          ssh-private-key: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
 
-
-      - name: Print private key
-        run: ssh-add -L
-
-      - name: SSH Login 2
-        run: ssh -o "StrictHostKeyChecking=no" root@${{ secrets.SERVER_IP }} code 
+      - name: SSH into server and run script
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
+          script: |
+            cd /root/
+            ./deploy.sh
