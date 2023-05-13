@@ -31,12 +31,10 @@ jobs:
           echo "Server IP: ${{ secrets.SERVER_IP }}"
           echo "::set-output name=server_ip::${{ secrets.SERVER_IP }}"
 
-      - name: Setup SSH Agent
+      - name: Authenticate with SSH
         uses: webfactory/ssh-agent@v0.5.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Authenticate with SSH
         run: |
           ssh-add -l
           ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} exit
@@ -57,12 +55,17 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} 'sudo systemctl daemon-reload && sudo systemctl restart farm.service'
 
-      - name: Log deployment status
-        uses: sp4ke/actions-log-deployment-status@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ job.status }}
-          environment: production
-          deployment_id: ${{ github.run_id }}
-          url: https://example.com
-          description: "Deployment Status"
+      - name: Update deployment status
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ job.status }}" == "success" ]]; then
+            echo "Updating deployment status..."
+            curl -X POST -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.ant-man-preview+json" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/deployments/${{ github.run_id }}/statuses" \
+              -d "{\"state\": \"success\", \"environment\": \"production\", \"description\": \"Deployment succeeded\", \"target_url\": \"https://example.com\"}"
+          else
+            echo "Deployment failed."
+          fi
