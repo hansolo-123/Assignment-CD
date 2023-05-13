@@ -14,14 +14,12 @@ jobs:
 
       - name: SSH Login
         run: |
-          ssh-add ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
+          eval "$(ssh-agent -s)"
+          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
           ssh -o "StrictHostKeyChecking=yes" root@${{ secrets.SERVER_IP }}
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh-XXXXXXPDsdvR/agent.86356
-          SSH_AGENT_PID: 86357
 
       - name: Print private key
         run: ssh-add -L
 
       - name: SSH Login 2
-        run: ssh -o "StrictHostKeyChecking=no" root@${{ secrets.SERVER_IP }}
+        run: ssh -o "StrictHostKeyChecking=no" root@${{ secrets.SERVER_IP }} code 
