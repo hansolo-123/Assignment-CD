@@ -6,18 +6,19 @@ on:
       - main
 
 env:
-  SERVER_IP: ${{ secrets.SERVER_IP }}
+  SERVER_IP: <SERVER_IP>
   SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
 jobs:
   ssh-login:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-      - name: Configure SSH
-        uses: webfactory/ssh-agent@v0.4.1
-        with:
-          ssh-private-key: ${{ env.SSH_PRIVATE_KEY }}
+      - name: Add SSH Host Key
+        run: ssh-keyscan ${SERVER_IP} >> ~/.ssh/known_hosts
       - name: SSH Login
-        run: ssh root@${{ env.SERVER_IP }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 400 ~/.ssh/id_rsa
+          ssh -o "StrictHostKeyChecking no" root@${SERVER_IP} "ls"
