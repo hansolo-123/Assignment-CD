@@ -1,4 +1,4 @@
-name: Deploy to Server
+name: Establish SSH Connection
 
 on:
   push:
@@ -15,11 +15,7 @@ jobs:
         uses: webfactory/ssh-agent@v0.5.0
         with:
           ssh-private-key: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
-
-      - name: Copy files to server
+          
+      - name: Test SSH Connection
         run: |
-          scp -r -i ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }} ./* root@${{ secrets.SERVER_IP }}:/root/
-
-      - name: SSH into server and run script
-        run: |
-          ssh -o "StrictHostKeyChecking=yes" -i ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }} root@${{ secrets.SERVER_IP }} 'cd /root/ && ./deploy.sh code and use root as user'
+          ssh -o "StrictHostKeyChecking=yes" -i ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }} root@${{ secrets.SERVER_IP }} 'echo "SSH connection established successfully."'
