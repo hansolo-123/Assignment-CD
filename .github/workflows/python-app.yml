@@ -12,13 +12,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Add SSH Key to Agent
-        uses: webfactory/ssh-agent@v0.4.1
-        with:
-          ssh-private-key: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
+      - name: SSH Login
+        run: |
+          ssh-add ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
+          ssh -o "StrictHostKeyChecking=no" root@${{ secrets.SERVER_IP }}
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh-XXXXXXPDsdvR/agent.86356
+          SSH_AGENT_PID: 86357
 
       - name: Print private key
         run: ssh-add -L
 
-      - name: SSH Login
-        run: ssh -o "StrictHostKeyChecking=no" root@${{ env.SERVER_IP }}
+      - name: SSH Login 2
+        run: ssh -o "StrictHostKeyChecking=no" root@${{ secrets.SERVER_IP }}
