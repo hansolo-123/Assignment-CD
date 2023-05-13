@@ -1,19 +1,11 @@
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [main]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: self-hosted
-
     steps:
       - name: Check if Python is installed
         run: |
@@ -27,7 +19,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3
 
-      # Generate requirements.txt
       - name: Generate requirements.txt
         run: |
           pip install pipreqs
@@ -35,34 +26,36 @@ jobs:
           python3 -m pip install --upgrade pip
           pip3 install -r requirements.txt
 
-      # Run our unit tests using the test application
-      - name: Test with pytest
+      - name: Get server IP
         run: |
-          pytest ./farm/tests/test_farm.py
+          echo "Server IP: ${{ secrets.SERVER_IP }}"
+          echo "::set-output name=server_ip::${{ secrets.SERVER_IP }}"
 
-      - name: SSH Authentication
+      - name: Authenticate with SSH
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /root/id_rsa.pub
-          chmod 400 /root/id_rsa.pub
-     
-      - name: Deploy App - Step 4
+          ssh-add -l
+          ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} exit
+
+      - name: Deploy App - Step 1
         run: |
-          rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -i /root/id_rsa.pub -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no'" /github/workspace/Assignment-CD/ root@http://178.128.92.153:/home/
-      - name: Restart farm service - Step 5
+          rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -p 22" /github/workspace/Assignment-CD/ root@${{ needs.build.outputs.server_ip }}:/home/deploy/app
+
+      - name: Deploy App - Step 2
         run: |
-          ssh -o StrictHostKeyChecking=no -i /root/id_rsa -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no' root@178.128.92.153:/home/ "sudo systemctl daemon-reload && sudo systemctl restart farm.service"
+          ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} 'chmod +x /home/deploy/app/deploy.sh'
+
+      - name: Deploy App - Step 3
+        run: |
+          ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} '/home/deploy/app/deploy.sh'
 
       - name: Restart farm service
         run: |
-          sudo systemctl daemon-reload
-          sudo systemctl restart farm.service
+          ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} 'sudo systemctl daemon-reload && sudo systemctl restart farm.service'
 
-  # This workflow contains a separate job called "logging"
-  logging:
-    runs-on: self-hosted
-    needs: build
-    steps:
-      - name: Logging
+      - name: Log deployment status
         uses: sp4ke/actions-log-deployment-status@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
