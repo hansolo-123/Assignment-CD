@@ -19,6 +19,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
       - name: Add Deploy Key to Known Hosts
-        run: ssh-keyscan -H ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
+        run: ssh-keyscan -H ${{ env.SERVER_IP }} >> ~/.ssh/id_rsa
       - name: SSH Login
         run: ssh root@${{ env.SERVER_IP }}
