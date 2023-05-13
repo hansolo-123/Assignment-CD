@@ -42,19 +42,7 @@ jobs:
       - name: Start ssh-agent and add deploy key
         uses: webfactory/ssh-agent@v0.5.0
         with:
-          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
-          ssh-key-name: deploy
-
-      - name: Log into DigitalOcean
-        run: |
-          echo "Logging into DigitalOcean"
-          echo "" > ~/.ssh/config
-          echo "Host $DO_IP_ADDRESS" >> ~/.ssh/config
-          echo "  IdentityFile ~/.ssh/deploy" >> ~/.ssh/config
-          chmod 600 ~/.ssh/config
-          ssh-keyscan -t rsa $DO_IP_ADDRESS > ~/.ssh/known_hosts
-          ssh -o StrictHostKeyChecking=no root@$DO_IP_ADDRESS "echo Logged in successfully"
-
+          ssh-private-key: deploy
 
       - name: Log into DigitalOcean
         run: |
