@@ -9,44 +9,23 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build-and-deploy"
-  build-and-deploy:
+  # This workflow contains a single job called "deploy"
+  deploy:
     # The type of runner that the job will run on
     runs-on: self-hosted
 
     steps:
-      - name: Check if Python is installed
+      - name: Log into DigitalOcean
         run: |
-          if command -v python3 >/dev/null 2>&1 ; then
-            echo "Python is already installed"
-            exit 0
-          fi
-      - name: Install Python
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3
-
-      - name: Generate requirements.txt
-        run: |
-          echo "Generating requirements.txt file"
-          pip install pipreqs
-          pipreqs . --force
-          python3 -m pip install --upgrade pip
-          pip3 install -r requirements.txt
-
-      - name: Run unit tests
-        run: |
-          echo "Running unit tests with pytest"
-          pytest ./farm/tests/test_farm.py
-
-      - name: Deploy to server
-        run: |
-          echo "Deploying app to server"
+          echo "Logging into DigitalOcean"
           echo "" > ~/.ssh/do_token
           chmod 600 ~/.ssh/do_token
-          echo "$DEPLOY_SSH" > ~/.ssh/do_token
           ssh-keyscan -t rsa 178.128.92.153 > ~/.ssh/known_hosts
           ssh -i ~/.ssh/do_token -o StrictHostKeyChecking=no root@178.128.92.153 "echo Logged in successfully"
+
+      - name: Deploy app to server
+        run: |
+          echo "Deploying app to server"
           rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/do_token -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no'" /github/workspace/Assignment-CD/ root@178.128.92.153:/home/
 
       - name: Restart farm service
