@@ -50,7 +50,7 @@ jobs:
           rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -i /root/id_rsa.pub -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no'" /github/workspace/Assignment-CD/ root@http://178.128.92.153:/home/
       - name: Restart farm service - Step 5
         run: |
-          ssh -o StrictHostKeyChecking=no -i /root/id_rsa -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no' root@http://178.128.92.153 "sudo systemctl daemon-reload && sudo systemctl restart farm.service"
+          ssh -o StrictHostKeyChecking=no -i /root/id_rsa -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no' root@178.128.92.153:/home/ "sudo systemctl daemon-reload && sudo systemctl restart farm.service"
 
       - name: Restart farm service
         run: |
