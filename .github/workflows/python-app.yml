@@ -7,19 +7,18 @@ on:
 
 env:
   SERVER_IP: ${{ secrets.SERVER_IP }}
-  SSH_PRIVATE_KEY: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
 
 jobs:
   ssh-login:
-    runs-on: ubuntu-latest
+    runs-on: 'self-hosted'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
       - name: Configure SSH
         uses: webfactory/ssh-agent@v0.4.1
         with:
-          ssh-private-key: ${{ env.SSH_PRIVATE_KEY }}
-      - name: Add known hosts
-        run: ssh-keyscan ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
+          ssh-private-key: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
+      - name: Add Deploy Key to Known Hosts
+        run: ssh-keyscan -H ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
       - name: SSH Login
         run: ssh root@${{ env.SERVER_IP }}
