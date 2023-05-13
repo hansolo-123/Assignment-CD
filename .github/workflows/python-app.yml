@@ -56,9 +56,11 @@ jobs:
           ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} 'sudo systemctl daemon-reload && sudo systemctl restart farm.service'
 
       - name: Log deployment status
-        uses: peter-evans/create-pull-request@v3.10.1
+        uses: sp4ke/actions-log-deployment-status@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Deployed to production server"
-          branch: deploy-to-production
-          delete-branch: true
+          status: ${{ job.status }}
+          environment: production
+          deployment_id: ${{ github.run_id }}
+          url: https://example.com
+          description: "Deployment Status"
