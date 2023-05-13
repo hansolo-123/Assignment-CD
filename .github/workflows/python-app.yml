@@ -40,11 +40,22 @@ jobs:
         run: |
           pytest ./farm/tests/test_farm.py
 
-      - name: Deploy App
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: SSH Authentication - Step 1
         run: |
-          rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -i /root/id_rsa.pub -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no'" /github/workspace/Assignment-CD/ root@http://178.128.92.153/:/home/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /root/id_rsa
+          chmod 400 /root/id_rsa
+      - name: SSH Authentication - Step 2
+        run: |
+          ssh-keyscan -H http://178.128.92.153 >> ~/.ssh/known_hosts
+      - name: SSH Authentication - Step 3
+        run: |
+          ssh -o StrictHostKeyChecking=no -i /root/id_rsa -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no' root@http://178.128.92.153 "echo SSH authentication successful."
+      - name: Deploy App - Step 4
+        run: |
+          rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -i /root/id_rsa.pub -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no'" /github/workspace/Assignment-CD/ root@http://178.128.92.153:/home/
+      - name: Restart farm service - Step 5
+        run: |
+          ssh -o StrictHostKeyChecking=no -i /root/id_rsa -p 22 -o 'UserKnownHostsFile=/dev/null' -o 'IdentitiesOnly=yes' -o 'PreferredAuthentications=publickey' -o 'PasswordAuthentication=no' root@http://178.128.92.153 "sudo systemctl daemon-reload && sudo systemctl restart farm.service"
 
       - name: Restart farm service
         run: |
