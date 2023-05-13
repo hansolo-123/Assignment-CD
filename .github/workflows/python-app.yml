@@ -27,12 +27,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3
 
-      - name: Log into DigitalOcean using deploy access token
-        run: |
           echo "Logging into DigitalOcean"
-          echo "${{ secrets.DEPLOY }}" > ~/.ssh/do_token
+
+          echo "Creating do_token file"
+          touch ~/.ssh/do_token
+
+          echo "Setting permissions for do_token file"
           chmod 600 ~/.ssh/do_token
+
+          echo "Adding the DigitalOcean host key to known_hosts"
           ssh-keyscan -t rsa 178.128.92.153 > ~/.ssh/known_hosts
+
+          echo "Logging into DigitalOcean server"
           ssh -i ~/.ssh/do_token -o StrictHostKeyChecking=no root@178.128.92.153 "echo Logged in successfully"
 
       # Generate requirements.txt
