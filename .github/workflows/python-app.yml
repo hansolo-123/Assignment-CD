@@ -16,8 +16,9 @@ jobs:
         run: |
           export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/
           eval "$(ssh-agent -s)"
-          ssh-add - <<< "${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}"
+          ssh-add ~/.ssh/id_rsa
           ssh -o "StrictHostKeyChecking=yes" root@${{ secrets.SERVER_IP }}
+
 
       - name: Print private key
         run: ssh-add -L
