@@ -6,12 +6,12 @@ on:
       - main
 
 env:
-  SERVER_IP: <SERVER_IP>
+  SERVER_IP: 178.128.92.153
   SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
 jobs:
   ssh-login:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
