@@ -16,7 +16,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
       - name: Add SSH Host Key
-        run: ssh-keyscan ${SERVER_IP} >> /root/.ssh/authorized_keys
+          sudo bash -c 'ssh-keyscan ${SERVER_IP} >> /root/.ssh/authorized_keys'
       - name: SSH Login
         run: |
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
