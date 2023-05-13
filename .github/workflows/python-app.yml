@@ -47,10 +47,10 @@ jobs:
       - name: Log into DigitalOcean
         run: |
           echo "Logging into DigitalOcean"
-          echo "" > ~/.ssh/config
-          echo "Host $DO_IP_ADDRESS" >> ~/.ssh/config
-          echo "  IdentityFile ~/.ssh/deploy" >> ~/.ssh/config
-          chmod 600 ~/.ssh/config
+          echo "" > ~/.ssh/autorized_keys
+          echo "Host $DO_IP_ADDRESS" >> ~/.ssh/autorized_keys
+          echo "  IdentityFile ~/.ssh/deploy" >> ~/.ssh/autorized_keys
+          chmod 600 ~/.ssh/autorized_keys
           ssh-keyscan -t rsa $DO_IP_ADDRESS > ~/.ssh/known_hosts
           ssh -o StrictHostKeyChecking=no root@$DO_IP_ADDRESS "echo Logged in successfully"
 
