@@ -1,21 +1,24 @@
-name: SSH Login Workflow
+name: SSH Connection Test
 
 on:
   push:
     branches:
       - main
 
-env:
-  SERVER_IP: ${{ secrets.SERVER_IP }}
-  SSH_PRIVATE_KEY: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
-
 jobs:
-  ssh-login:
-    runs-on: ubuntu-latest
+  ssh-connection:
+    runs-on: 'remotely-hosted'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+
+      - name: Add SSH Key to Agent
+        uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
+
       - name: Print private key
-        run: echo $SSH_PRIVATE_KEY
+        run: ssh-add -L
+
       - name: SSH Login
         run: ssh -o "StrictHostKeyChecking=no" root@${{ env.SERVER_IP }}
