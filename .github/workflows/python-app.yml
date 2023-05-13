@@ -40,28 +40,25 @@ jobs:
           ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} exit
 
       - name: Deploy App - Step 1
-        run: rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -p 22" /github/workspace/Assignment-CD/ root@${{ needs.build.outputs.server_ip }}:/home/deploy/app
+        run: |
+          rsync -avz --exclude='.git*' --exclude='__pycache__' -e "ssh -o StrictHostKeyChecking=no -p 22" /github/workspace/Assignment-CD/ root@${{ needs.build.outputs.server_ip }}:/home/deploy/app
 
       - name: Deploy App - Step 2
-        run: ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} 'chmod +x /home/deploy/app/deploy.sh'
+        run: |
+          ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} 'chmod +x /home/deploy/app/deploy.sh'
 
       - name: Deploy App - Step 3
-        run: ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} '/home/deploy/app/deploy.sh'
+        run: |
+          ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} '/home/deploy/app/deploy.sh'
 
       - name: Restart farm service
-        run: ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} 'sudo systemctl daemon-reload && sudo systemctl restart farm.service'
+        run: |
+          ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} 'sudo systemctl daemon-reload && sudo systemctl restart farm.service'
 
       - name: Log deployment status
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEPLOYMENT_ID: ${{ github.run_id }}
-          DEPLOYMENT_ENVIRONMENT: production
-          DEPLOYMENT_DESCRIPTION: "Deployment Status"
-          DEPLOYMENT_URL: https://example.com
-        run: |
-          curl \
-            -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d '{"state": "success", "environment": "'"$DEPLOYMENT_ENVIRONMENT"'", "description": "'"$DEPLOYMENT_DESCRIPTION"'", "auto_inactive": true, "environment_url": "'"$DEPLOYMENT_URL"'"}' \
-            https://api
+        uses: peter-evans/create-pull-request@v3.10.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Deployed to production server"
+          branch: deploy-to-production
+          delete-branch: true
