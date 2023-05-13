@@ -7,7 +7,7 @@ on:
 
 env:
   SERVER_IP: ${{ secrets.SERVER_IP }}
-  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  SSH_PRIVATE_KEY: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
 
 jobs:
   ssh-login:
@@ -19,8 +19,7 @@ jobs:
         uses: webfactory/ssh-agent@v0.4.1
         with:
           ssh-private-key: ${{ env.SSH_PRIVATE_KEY }}
+      - name: Add known hosts
+        run: ssh-keyscan ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
       - name: SSH Login
-        run: |
-          ssh-add -l || echo "ssh-agent not running"
-          ssh-add -k ${{ env.SSH_PRIVATE_KEY }}
-          ssh -o StrictHostKeyChecking=no root@${{ env.SERVER_IP }}
+        run: ssh root@${{ env.SERVER_IP }}
