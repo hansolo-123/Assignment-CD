@@ -31,10 +31,12 @@ jobs:
           echo "Server IP: ${{ secrets.SERVER_IP }}"
           echo "::set-output name=server_ip::${{ secrets.SERVER_IP }}"
 
-      - name: Authenticate with SSH
+      - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.5.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Authenticate with SSH
         run: |
           ssh-add -l
           ssh -o StrictHostKeyChecking=no -p 22 root@${{ needs.build.outputs.server_ip }} exit
