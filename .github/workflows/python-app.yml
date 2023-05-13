@@ -18,4 +18,4 @@ jobs:
 
       - name: SSH into server
         run: |
-          ssh -o "StrictHostKeyChecking=no" -i ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }} root@${{ secrets.SERVER_IP }} 'echo "SSH connection established successfully."' 
+          ssh -o "StrictHostKeyChecking=no" -i /root/.ssh/id_rsa root@${{ secrets.SERVER_IP }} 'echo "SSH connection established successfully."'
