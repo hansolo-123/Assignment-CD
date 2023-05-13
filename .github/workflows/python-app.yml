@@ -7,18 +7,15 @@ on:
 
 env:
   SERVER_IP: ${{ secrets.SERVER_IP }}
+  SSH_PRIVATE_KEY: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
 
 jobs:
   ssh-login:
-    runs-on: 'self-hosted'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-      - name: Configure SSH
-        uses: webfactory/ssh-agent@v0.4.1
-        with:
-          ssh-private-key: ${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}
-      - name: Add Deploy Key to Known Hosts
-        run: ssh-keyscan -H ${{ env.SERVER_IP }} >> ~/.ssh/id_rsa
+      - name: Print private key
+        run: echo $SSH_PRIVATE_KEY
       - name: SSH Login
-        run: ssh root@${{ env.SERVER_IP }}
+        run: ssh -o "StrictHostKeyChecking=no" root@${{ env.SERVER_IP }}
