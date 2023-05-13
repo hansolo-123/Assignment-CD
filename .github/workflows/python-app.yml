@@ -31,22 +31,19 @@ jobs:
           echo "Server IP: ${{ secrets.SERVER_IP }}"
           echo "::set-output name=server_ip::${{ secrets.SERVER_IP }}"
 
-          run: |
-            server_ip="***"
-            echo "Server IP: $server_ip"
-            echo "SERVER_IP=$server_ip" >> $GITHUB_ENV
-
-            # Write the SSH private key to a file called 'ssh_key'
-            echo "$SSH_PRIVATE_KEY" > ssh_key
-
-            # Restrict permissions on the file to only the current user
-            chmod 600 ssh_key
-
-            # Extract the public key from the private key and compare it to the authorized_keys file
-            ssh-keygen -y -f ssh_key | diff - /root/.ssh/authorized_keys
-          shell: /usr/bin/bash -e {0}
-
-
+          echo "Server IP: ***"
+          if command -v run >/dev/null 2>&1; then
+            run some_command
+          else
+            echo "Warning: 'run' command not found. Please install it."
+          fi
+          echo "Load key \"ssh_key\": error in libcrypto"
+          ssh-add ssh_key 2>/dev/null
+          if [ $? -eq 0 ]; then
+            echo "SSH key added successfully."
+          else
+            echo "Error: Failed to add SSH key."
+          fi
 
       - name: Deploy App - Step 1
         run: |
