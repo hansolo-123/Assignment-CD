@@ -15,10 +15,10 @@ jobs:
         run: echo "${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}" > /tmp/deploy_key
       - name: Set proper permissions for SSH key
         run: chmod 600 /tmp/deploy_key
-      - name: Add SSH private key to agent
-        uses: webfactory/ssh-agent@v0.5.0
-        with:
-          ssh-private-key: /tmp/deploy_key
+
+      - name: Mask private key
+        run: |
+          echo "::add-mask::${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}"
 
       - name: SSH into server
         run: |
