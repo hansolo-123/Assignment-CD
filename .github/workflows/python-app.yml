@@ -2,7 +2,7 @@ name: Deploy to Server
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   ssh-connection:
@@ -13,10 +13,10 @@ jobs:
         
       - name: Check if Python is installed
         run: |
-         if command -v python3 >/dev/null 2>&1 ; then
-         echo "Python is already installed"
-         exit 0
-         fi
+          if command -v python3 >/dev/null 2>&1 ; then
+            echo "Python is already installed"
+            exit 0
+          fi
 
       - name: Install Python
         run: |
@@ -31,8 +31,10 @@ jobs:
           pip3 install -r requirements.txt
 
       - name: Test with pytest
+        id: test
         run: |
           pytest /home/farm/tests/test_farm.py
+        continue-on-error: true
 
       - name: Set up SSH
         run: echo "${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}" > /tmp/deploy_key
@@ -44,23 +46,25 @@ jobs:
           echo "::add-mask::${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}"
 
       - name: SSH into server
+        if: ${{ steps.test.outcome == 'success' }}
         run: |
           ssh -o "StrictHostKeyChecking=yes" -i /root/.ssh/id_rsa root@${{ secrets.SERVER_IP }} 'echo "SSH connection established successfully."'
       
       - name: Stop services 
+        if: ${{ steps.test.outcome == 'success' }}
         run: | 
          sudo systemctl stop nginx
          sudo systemctl stop farm.service
 
       - name: Copy repository to droplet
+        if: ${{ steps.test.outcome == 'success' }}
         run: |
           cp -r . /home/
           ssh -o "StrictHostKeyChecking=yes" -i /root/.ssh/id_rsa root@${{ secrets.SERVER_IP }} 'echo "Files copied successfully."'
 
       - name: Restart services
+        if: ${{ steps.test.outcome == 'success' }}
         run: |
          sudo systemctl daemon-reload
          sudo systemctl restart nginx
          sudo systemctl restart farm.service
-         
- 
