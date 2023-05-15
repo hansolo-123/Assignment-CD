@@ -23,6 +23,12 @@ jobs:
       - name: SSH into server
         run: |
           ssh -o "StrictHostKeyChecking=yes" -i /root/.ssh/id_rsa root@${{ secrets.SERVER_IP }} 'echo "SSH connection established successfully."'
+      
+      - name: Stop services 
+        run: | 
+         systemctl stop gunicorn
+         sudo systemctl stop nginx
+         sudo systemctl stop farm.service
 
       - name: Copy repository to droplet
         run: |
@@ -30,5 +36,8 @@ jobs:
 
       - name: Restart services
         run: |
-          sudo systemctl daemon-reload
-          sudo systemctl restart farm.service
+         systemctl start gunicorn
+         sudo systemctl start nginx
+         sudo systemctl stop farm.service
+         sudo systemctl daemon-reload
+         sudo systemctl restart farm.service
