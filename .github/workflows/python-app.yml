@@ -26,8 +26,8 @@ jobs:
 
       - name: Copy repository to droplet
         run: |
-          scp -o "StrictHostKeyChecking=yes" -i /root/.ssh/id_rsa -r . root@${{ secrets.SERVER_IP }}:/root/home/
-          
+          scp -o "StrictHostKeyChecking=yes" -i /root/.ssh/id_rsa -rB . root@${{ secrets.SERVER_IP }}:/root/home/
+
       - name: Restart services
         run: |
           sudo systemctl daemon-reload
