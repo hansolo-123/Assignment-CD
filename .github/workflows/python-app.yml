@@ -31,7 +31,7 @@ jobs:
 
       - name: Copy repository to droplet
         run: |
-          cp -r . /root/home/
+          cp -r . /home/
           ssh -o "StrictHostKeyChecking=yes" -i /root/.ssh/id_rsa root@${{ secrets.SERVER_IP }} 'echo "Files copied successfully."'
 
       - name: Restart services
