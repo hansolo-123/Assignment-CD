@@ -10,6 +10,29 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+        
+      - name: Check if Python is installed
+        run: |
+         if command -v python3 >/dev/null 2>&1 ; then
+         echo "Python is already installed"
+         exit 0
+         fi
+
+      - name: Install Python
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3
+
+      - name: Generate requirements.txt
+        run: |
+          pip install pipreqs
+          pipreqs /home/farm --force
+          python3 -m pip install --upgrade pip
+          pip3 install -r /home/farm/requirements.txt
+
+      - name: Test with pytest
+        run: |
+          pytest /home/farm/tests/test_farm.py
 
       - name: Set up SSH
         run: echo "${{ secrets.DIGITAL_OCEAN_PRIVATE_KEY }}" > /tmp/deploy_key
