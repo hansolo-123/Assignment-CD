@@ -23,3 +23,7 @@ jobs:
       - name: SSH into server
         run: |
           ssh -o "StrictHostKeyChecking=yes" -i /root/.ssh/id_rsa root@${{ secrets.SERVER_IP }} 'echo "SSH connection established successfully."'
+
+      - name: Copy repository to droplet
+        run: |
+          scp -o "StrictHostKeyChecking=yes" -i /root/.ssh/id_rsa -r . root@${{ secrets.SERVER_IP }}:/root/home
