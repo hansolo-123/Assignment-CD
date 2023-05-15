@@ -36,7 +36,6 @@ jobs:
       - name: Restart services
         run: |
          sudo systemctl daemon-reload
-         systemctl start gunicorn
          sudo systemctl restart nginx
          sudo systemctl restart farm.service
          
