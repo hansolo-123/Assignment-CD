@@ -26,7 +26,6 @@ jobs:
       
       - name: Stop services 
         run: | 
-         systemctl stop gunicorn
          sudo systemctl stop nginx
          sudo systemctl stop farm.service
 
@@ -36,8 +35,9 @@ jobs:
 
       - name: Restart services
         run: |
-         systemctl start gunicorn
-         sudo systemctl start nginx
-         sudo systemctl stop farm.service
          sudo systemctl daemon-reload
+         systemctl start gunicorn
+         sudo systemctl restart nginx
          sudo systemctl restart farm.service
+         
+ 
