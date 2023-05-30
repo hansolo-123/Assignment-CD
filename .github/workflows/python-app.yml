@@ -68,3 +68,4 @@ jobs:
          sudo systemctl daemon-reload
          sudo systemctl restart nginx
          sudo systemctl restart farm.service
+         systemctl status farm.service
